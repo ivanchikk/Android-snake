@@ -10,6 +10,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 
 public class CanvasView extends View {
+    private Paint snakeHead;
     private Paint snakeBody;
     private Paint food;
     private Paint level;
@@ -30,6 +31,9 @@ public class CanvasView extends View {
     }
 
     private void init() {
+        snakeHead = new Paint();
+        snakeHead.setColor(Color.YELLOW);
+
         snakeBody = new Paint();
         snakeBody.setColor(Color.GREEN);
 
@@ -48,7 +52,11 @@ public class CanvasView extends View {
         canvas.drawRect(0f, 0f, GameConfig.FIELD_WIDTH, GameConfig.FIELD_HEIGHT, level);
 
         // draw snake
-        for (Part part : Snake.bodyParts) {
+        Part head = Snake.getHead();
+        canvas.drawRect(head.x, head.y, head.x + Part.SIZE, head.y + Part.SIZE, snakeHead);
+
+        for (int i = 1; i < Snake.bodyParts.size(); i++) {
+            Part part = Snake.bodyParts.get(i);
             canvas.drawRect(part.x, part.y, part.x + Part.SIZE, part.y + Part.SIZE, snakeBody);
         }
 

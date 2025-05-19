@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         Button backButton = findViewById(R.id.back_button);
 
         loadBestScore();
-        updateBestScoreDisplay();
+        updateBestScore();
 
         startButton.setOnClickListener(v -> startGame());
         backButton.setOnClickListener(v -> showMainMenu());
@@ -75,26 +75,22 @@ public class MainActivity extends AppCompatActivity {
         canvasView.setOnTouchListener(new OnSwipeTouchListener(this) {
             @Override
             public void onSwipeLeft() {
-                if (Snake.direction != Snake.Direction.RIGHT)
-                    Snake.direction = Snake.Direction.LEFT;
+                Snake.nextDirection = Snake.Direction.LEFT;
             }
 
             @Override
             public void onSwipeRight() {
-                if (Snake.direction != Snake.Direction.LEFT)
-                    Snake.direction = Snake.Direction.RIGHT;
+                Snake.nextDirection = Snake.Direction.RIGHT;
             }
 
             @Override
             public void onSwipeTop() {
-                if (Snake.direction != Snake.Direction.UP)
-                    Snake.direction = Snake.Direction.DOWN;
+                Snake.nextDirection = Snake.Direction.UP;
             }
 
             @Override
             public void onSwipeBottom() {
-                if (Snake.direction != Snake.Direction.DOWN)
-                    Snake.direction = Snake.Direction.UP;
+                Snake.nextDirection = Snake.Direction.DOWN;
             }
         });
 
@@ -125,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startGame() {
         Snake.reset();
-        Food.generate();
+        generateFood();
         score = 0;
         gameSpeed = GameConfig.START_SPEED;
 
@@ -140,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         if (score > bestScore) {
             bestScore = score;
             saveBestScore();
-            updateBestScoreDisplay();
+            updateBestScore();
         }
 
         runOnUiThread(this::showGameOverScreen);
@@ -168,43 +164,24 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        switch (Snake.direction) {
-            case UP:
-                Snake.head.y -= GameConfig.STEP;
-                break;
-            case DOWN:
-                Snake.head.y += GameConfig.STEP;
-                break;
-            case LEFT:
-                Snake.head.x -= GameConfig.STEP;
-                break;
-            case RIGHT:
-                Snake.head.x += GameConfig.STEP;
-                break;
-        }
+        Snake.move();
 
-        if (!Snake.canMove()) {
+        if (!Snake.canMove() || Snake.hasCollisionWithSelf()) {
             Snake.alive = false;
             endGame();
             return;
         }
 
-        // Check for collision with itself
-        for (Part part : Snake.bodyParts) {
-            if (part.isAtSamePosition(Snake.head)) {
+        // Check if snake eats food
+        if (Snake.getHead().isAtSamePosition(Food.food)) {
+            Snake.grow();
+
+            if (!generateFood()) {
                 Snake.alive = false;
                 endGame();
                 return;
             }
-        }
 
-        // Add new head to body
-        Part newPart = new Part(Snake.head.x, Snake.head.y);
-        Snake.bodyParts.add(newPart);
-
-        // Check if snake eats food
-        if (Snake.head.isAtSamePosition(Food.food)) {
-            Food.generate();
             score++;
             runOnUiThread(this::updateScore);
 
@@ -216,22 +193,33 @@ public class MainActivity extends AppCompatActivity {
                 executor = Executors.newSingleThreadScheduledExecutor();
                 executor.scheduleWithFixedDelay(this::updateGame, 0, gameSpeed, TimeUnit.MILLISECONDS);
             }
-        } else {
-            // Remove tail if not eating
-            if (!Snake.bodyParts.isEmpty()) {
-                Snake.bodyParts.remove(0);
-            }
         }
 
-        // update canvas on UI thread
+        // Redraw canvas on UI thread
         runOnUiThread(() -> canvasView.invalidate());
+    }
+
+    private boolean generateFood() {
+        int fieldArea = (int) ((GameConfig.FIELD_WIDTH / GameConfig.STEP) * (GameConfig.FIELD_HEIGHT / GameConfig.STEP));
+        int snakeSize = Snake.bodyParts.size();
+
+        if (snakeSize >= fieldArea)
+            return false;
+
+        boolean onSnake;
+        do {
+            Food.generate();
+            onSnake = Snake.isPartOfSnake(Food.food);
+        } while (onSnake);
+
+        return true;
     }
 
     private void updateScore() {
         scoreTextView.setText(String.format(Locale.ENGLISH, "Score: %d", score));
     }
 
-    private void updateBestScoreDisplay() {
+    private void updateBestScore() {
         bestScoreTextView.setText(String.format(Locale.ENGLISH, "Best score: %d", bestScore));
     }
 
