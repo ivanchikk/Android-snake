@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Check if snake eats food
-        if (Snake.getHead().isAtSamePosition(Food.food)) {
+        if (Snake.head.isAtSamePosition(Food.food)) {
             Snake.grow();
 
             if (!generateFood()) {

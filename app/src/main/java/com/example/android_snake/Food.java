@@ -6,10 +6,6 @@ public class Food {
     public static Part food;
     private static final Random random = new Random();
 
-    static {
-        generate();
-    }
-
     public static void generate() {
         int maxX = (int) ((GameConfig.FIELD_WIDTH - Part.SIZE) / GameConfig.STEP);
         int maxY = (int) ((GameConfig.FIELD_HEIGHT - Part.SIZE) / GameConfig.STEP);

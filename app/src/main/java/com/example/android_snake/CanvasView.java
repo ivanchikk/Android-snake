@@ -52,11 +52,10 @@ public class CanvasView extends View {
         canvas.drawRect(0f, 0f, GameConfig.FIELD_WIDTH, GameConfig.FIELD_HEIGHT, level);
 
         // draw snake
-        Part head = Snake.getHead();
+        Part head = Snake.head;
         canvas.drawRect(head.x, head.y, head.x + Part.SIZE, head.y + Part.SIZE, snakeHead);
 
-        for (int i = 1; i < Snake.bodyParts.size(); i++) {
-            Part part = Snake.bodyParts.get(i);
+        for (Part part : Snake.bodyParts) {
             canvas.drawRect(part.x, part.y, part.x + Part.SIZE, part.y + Part.SIZE, snakeBody);
         }
 
