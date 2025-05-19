@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -17,20 +19,20 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Locale;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @SuppressLint({"ClickableViewAccessibility", "SourceLockedOrientationActivity"})
 public class MainActivity extends AppCompatActivity {
     private CanvasView canvasView;
     private TextView scoreTextView;
     private TextView bestScoreTextView;
-    private ScheduledExecutorService executor;
-    public int gameSpeedMax = GameConfig.MAX_SPEED;
+    private Handler gameHandler;
+    private Runnable gameRunnable;
+    private boolean isGameRunning = false;
+    private int gameSpeedMax = GameConfig.MAX_SPEED;
     private int gameSpeed = GameConfig.START_SPEED;
     private int score = 0;
     private int bestScore = 0;
+    private Snake.Direction snakeDirection = Snake.Direction.RIGHT;
 
     private ConstraintLayout mainMenuLayout;
     private ConstraintLayout gameLayout;
@@ -65,8 +67,16 @@ public class MainActivity extends AppCompatActivity {
         Button startButton = findViewById(R.id.start_button);
         Button backButton = findViewById(R.id.back_button);
 
-        loadBestScore();
-        updateBestScore();
+        gameHandler = new Handler(Looper.getMainLooper());
+        gameRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isGameRunning) {
+                    updateGame();
+                    gameHandler.postDelayed(this, gameSpeed);
+                }
+            }
+        };
 
         startButton.setOnClickListener(v -> startGame());
         backButton.setOnClickListener(v -> showMainMenu());
@@ -75,25 +85,27 @@ public class MainActivity extends AppCompatActivity {
         canvasView.setOnTouchListener(new OnSwipeTouchListener(this) {
             @Override
             public void onSwipeLeft() {
-                Snake.nextDirection = Snake.Direction.LEFT;
+                snakeDirection = Snake.Direction.LEFT;
             }
 
             @Override
             public void onSwipeRight() {
-                Snake.nextDirection = Snake.Direction.RIGHT;
+                snakeDirection = Snake.Direction.RIGHT;
             }
 
             @Override
             public void onSwipeTop() {
-                Snake.nextDirection = Snake.Direction.UP;
+                snakeDirection = Snake.Direction.UP;
             }
 
             @Override
             public void onSwipeBottom() {
-                Snake.nextDirection = Snake.Direction.DOWN;
+                snakeDirection = Snake.Direction.DOWN;
             }
         });
 
+        loadBestScore();
+        updateBestScore();
         showMainMenu();
     }
 
@@ -139,23 +151,19 @@ public class MainActivity extends AppCompatActivity {
             updateBestScore();
         }
 
-        runOnUiThread(this::showGameOverScreen);
+        showGameOverScreen();
     }
 
     private void startGameLoop() {
-        if (executor != null) {
-            executor.shutdown();
+        if (!isGameRunning) {
+            isGameRunning = true;
+            gameHandler.postDelayed(gameRunnable, gameSpeed);
         }
-
-        executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleWithFixedDelay(this::updateGame, 0, gameSpeed, TimeUnit.MILLISECONDS);
     }
 
     private void stopGameLoop() {
-        if (executor != null) {
-            executor.shutdown();
-            executor = null;
-        }
+        isGameRunning = false;
+        gameHandler.removeCallbacks(gameRunnable);
     }
 
     private void updateGame() {
@@ -164,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        Snake.changeDirection(snakeDirection);
         Snake.move();
 
         if (!Snake.canMove() || Snake.hasCollisionWithSelf()) {
@@ -183,20 +192,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             score++;
-            runOnUiThread(this::updateScore);
+            updateScore();
 
+            // Update game speed
             if (gameSpeed > gameSpeedMax) {
                 gameSpeed -= GameConfig.SPEED_STEP;
-
-                // Update the scheduler with new speed
-                executor.shutdown();
-                executor = Executors.newSingleThreadScheduledExecutor();
-                executor.scheduleWithFixedDelay(this::updateGame, 0, gameSpeed, TimeUnit.MILLISECONDS);
             }
         }
 
-        // Redraw canvas on UI thread
-        runOnUiThread(() -> canvasView.invalidate());
+        // Redraw canvas
+        canvasView.invalidate();
     }
 
     private boolean generateFood() {
@@ -244,8 +249,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (executor == null && Snake.alive && gameLayout.getVisibility() == View.VISIBLE) {
-            startGame();
+        if (!isGameRunning && Snake.alive && gameLayout.getVisibility() == View.VISIBLE) {
+            startGameLoop();
         }
     }
 

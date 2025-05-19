@@ -6,8 +6,7 @@ import java.util.List;
 public class Snake {
     public static List<Part> bodyParts = new ArrayList<>();
     public static Part head;
-    public static Direction currentDirection;
-    public static Direction nextDirection;
+    public static Direction direction;
     public static boolean alive;
 
     public enum Direction {
@@ -21,19 +20,17 @@ public class Snake {
     public static void reset() {
         head = new Part(50f, 0f);
         bodyParts.clear();
-//        bodyParts.add(head);
         bodyParts.add(new Part(0f, 0f));
-        currentDirection = Direction.RIGHT;
-        nextDirection = Direction.RIGHT;
+        direction = Direction.RIGHT;
         alive = true;
     }
 
-    public static void changeDirection() {
-        if ((currentDirection == Direction.UP && nextDirection != Direction.DOWN) ||
-                (currentDirection == Direction.DOWN && nextDirection != Direction.UP) ||
-                (currentDirection == Direction.LEFT && nextDirection != Direction.RIGHT) ||
-                (currentDirection == Direction.RIGHT && nextDirection != Direction.LEFT)) {
-            currentDirection = nextDirection;
+    public static void changeDirection(Direction newDirection) {
+        if ((direction == Direction.UP && newDirection != Direction.DOWN) ||
+                (direction == Direction.DOWN && newDirection != Direction.UP) ||
+                (direction == Direction.LEFT && newDirection != Direction.RIGHT) ||
+                (direction == Direction.RIGHT && newDirection != Direction.LEFT)) {
+            direction = newDirection;
         }
     }
 
@@ -43,13 +40,14 @@ public class Snake {
     }
 
     public static void move() {
-        changeDirection();
-
         // Add part at the old head
         bodyParts.add(0, new Part(head.x, head.y));
 
+        // Remove part at the end
+        bodyParts.remove(bodyParts.size() - 1);
+
         // Update head position
-        switch (currentDirection) {
+        switch (direction) {
             case UP:
                 head.y += GameConfig.STEP;
                 break;
@@ -63,9 +61,6 @@ public class Snake {
                 head.x += GameConfig.STEP;
                 break;
         }
-
-        // Remove part at the end
-        bodyParts.remove(bodyParts.size() - 1);
     }
 
     public static void grow() {
