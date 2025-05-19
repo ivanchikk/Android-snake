@@ -28,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
     private Handler gameHandler;
     private Runnable gameRunnable;
     private boolean isGameRunning = false;
-    private int gameSpeedMax = GameConfig.MAX_SPEED;
     private int gameSpeed = GameConfig.START_SPEED;
     private int score = 0;
     private int bestScore = 0;
@@ -136,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         generateFood();
         score = 0;
         gameSpeed = GameConfig.START_SPEED;
+        snakeDirection = Snake.direction;
 
         updateScore();
         showGameScreen();
@@ -195,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
             updateScore();
 
             // Update game speed
-            if (gameSpeed > gameSpeedMax) {
+            if (gameSpeed > GameConfig.MAX_SPEED) {
                 gameSpeed -= GameConfig.SPEED_STEP;
             }
         }

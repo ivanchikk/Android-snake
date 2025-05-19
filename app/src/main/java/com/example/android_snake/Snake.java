@@ -18,7 +18,7 @@ public class Snake {
     }
 
     public static void reset() {
-        head = new Part(50f, 0f);
+        head = new Part(0f, 0f);
         bodyParts.clear();
         bodyParts.add(new Part(0f, 0f));
         direction = Direction.RIGHT;
