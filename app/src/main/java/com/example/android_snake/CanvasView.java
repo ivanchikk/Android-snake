@@ -13,7 +13,6 @@ public class CanvasView extends View {
     private Paint snakeHead;
     private Paint snakeBody;
     private Paint food;
-    private Paint level;
 
     public CanvasView(Context context) {
         super(context);
@@ -39,27 +38,21 @@ public class CanvasView extends View {
 
         food = new Paint();
         food.setColor(Color.RED);
-
-        level = new Paint();
-        level.setColor(Color.DKGRAY);
     }
 
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
 
-        // draw field
-        canvas.drawRect(0f, 0f, GameConfig.FIELD_WIDTH, GameConfig.FIELD_HEIGHT, level);
-
         // draw snake
         Part head = Snake.head;
-        canvas.drawRect(head.x, head.y, head.x + Part.SIZE, head.y + Part.SIZE, snakeHead);
+        canvas.drawRect(head.x + GameConfig.DRAW_OFFSET, head.y + GameConfig.DRAW_OFFSET, head.x + Part.SIZE + GameConfig.DRAW_OFFSET, head.y + Part.SIZE + GameConfig.DRAW_OFFSET, snakeHead);
 
         for (Part part : Snake.bodyParts) {
-            canvas.drawRect(part.x, part.y, part.x + Part.SIZE, part.y + Part.SIZE, snakeBody);
+            canvas.drawRect(part.x + GameConfig.DRAW_OFFSET, part.y + GameConfig.DRAW_OFFSET, part.x + Part.SIZE + GameConfig.DRAW_OFFSET, part.y + Part.SIZE + GameConfig.DRAW_OFFSET, snakeBody);
         }
 
         // draw food
-        canvas.drawRect(Food.food.x, Food.food.y, Food.food.x + Part.SIZE, Food.food.y + Part.SIZE, food);
+        canvas.drawRect(Food.food.x + GameConfig.DRAW_OFFSET, Food.food.y + GameConfig.DRAW_OFFSET, Food.food.x + Part.SIZE + GameConfig.DRAW_OFFSET, Food.food.y + Part.SIZE + GameConfig.DRAW_OFFSET, food);
     }
 }

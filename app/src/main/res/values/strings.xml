@@ -6,4 +6,6 @@
     <string name="ok">OK</string>
     <string name="title">Snake</string>
     <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
 </resources>
